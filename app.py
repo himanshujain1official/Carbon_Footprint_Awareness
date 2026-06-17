@@ -118,7 +118,7 @@ def generate_pie_chart(activities: list):
 
 # --- SIDEBAR NAVIGATION & TIPS ---
 with st.sidebar:
-    st.markdown("### 🧭 Navigation")
+    st.markdown("## 🧭 Navigation")
     st.markdown("Welcome to **Carbon 0**. Track and optimize your daily carbon emissions.")
     
     st.markdown("---")
@@ -129,7 +129,7 @@ with st.sidebar:
     st.info("**General 🌱**\n\nSmall lifestyle changes can add up to big carbon savings. \n\n✓ Unplug devices when not in use to avoid 'phantom' energy drain. \n\n✓ Reduce, reuse, recycle to minimize waste. \n\n✓ Supporting renewable energy and sustainable products can drive larger systemic change.")
     
     st.markdown("---")
-    if st.button("RESET DATA"):
+    if st.button("RESET DATA", help="Reset all carbon footprint data and chat history to start over"):
         st.session_state.daily_emissions = {
             "timestamp": datetime.now().strftime("%Y-%m-%d"),
             "total_kg": 0.0,
@@ -147,36 +147,38 @@ if not os.environ.get("GEMINI_API_KEY"):
 col1, col2 = st.columns([1.5, 1])
 
 with col1:
-    st.markdown("### 📊 Analytics Dashboard")
+    st.markdown("## 📊 Analytics Dashboard")
     baseline = get_baseline()
     current_emission = st.session_state.daily_emissions["total_kg"]
     
     # Render Metrics
     m1, m2, m3 = st.columns(3)
-    m1.metric("Today's Footprint", f"{current_emission:.2f} kg", delta=f"{current_emission - baseline:.2f} kg vs baseline", delta_color="inverse")
-    m2.metric("Daily Baseline", f"{baseline:.2f} kg")
+    m1.metric("Today's Footprint", f"{current_emission:.2f} kg", delta=f"{current_emission - baseline:.2f} kg vs baseline", delta_color="inverse", help="Total carbon emissions logged today")
+    m2.metric("Daily Baseline", f"{baseline:.2f} kg", help="Standard average daily footprint for comparison")
     status = "Optimal" if current_emission <= baseline else "Critical"
-    m3.metric("System Status", status)
+    m3.metric("System Status", status, help="Status indicating if you are below or above the baseline")
     
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Render Charts side by side
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
-        st.markdown("**Emission vs Baseline**")
+        st.markdown("### Emission vs Baseline")
+        st.caption("Visual representation of your current carbon emissions compared to the baseline.")
         st.plotly_chart(generate_bar_chart(current_emission, baseline), use_container_width=True)
     with chart_col2:
-        st.markdown("**Emission by Category (Donut 3D-Style)**")
+        st.markdown("### Emission by Category")
+        st.caption("Donut chart breaking down your carbon emissions by category.")
         st.plotly_chart(generate_pie_chart(st.session_state.daily_emissions["activities"]), use_container_width=True)
     
     # Render Activities Log
     if st.session_state.daily_emissions["activities"]:
-        st.markdown("**Recent Activity Logs**")
+        st.markdown("### Recent Activity Logs")
         df_activities = pd.DataFrame(st.session_state.daily_emissions["activities"])
         st.dataframe(df_activities, use_container_width=True, hide_index=True)
 
 with col2:
-    st.markdown("### 🤖 Smart Assistant")
+    st.markdown("## 🤖 Smart Assistant")
     st.caption("Log activities naturally. E.g., 'I drove 20km in a petrol car and used AC for 3 hours.' or 'I cooked with electricity for 1 hour.'")
     
     # Chat Interface Container
@@ -188,6 +190,8 @@ with col2:
                 st.markdown(msg["content"])
                 
     # Chat Input
+    # Note: st.chat_input does not support the 'help' parameter. 
+    # For accessibility, the descriptive caption above serves as context.
     user_input = st.chat_input("Enter your activity here...")
     
     if user_input:

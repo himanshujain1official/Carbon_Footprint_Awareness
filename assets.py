@@ -40,6 +40,26 @@ def get_custom_css():
             transform: translateY(-1px);
         }
 
+        /* --- ACCESSIBILITY FIXES --- */
+        
+        /* High Contrast Focus Rings for Keyboard Navigation */
+        button:focus, input:focus, textarea:focus, select:focus, a:focus {
+            outline: 3px solid #005fcc !important; /* High contrast blue against white background */
+            outline-offset: 2px !important;
+            box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.4) !important;
+        }
+
+        /* Strict requirement from user */
+        *:focus-visible { 
+            outline: 3px solid #005fcc !important; 
+            outline-offset: 2px !important; 
+        }
+
+        /* Ensure main body text maintains high contrast (4.5:1 ratio) against white background */
+        p, span, div, label {
+            color: #202124; /* Dark grey ensures WCAG AA compliance on #FFFFFF background */
+        }
+        
         /* Specific Button for the main action (Red accent) */
         .stButton > button[key="diagnostic_btn"] {
             border-color: #EA4335 !important;
@@ -60,8 +80,7 @@ def get_custom_css():
         }
 
         .stTextInput > div > div > input:focus, .stChatInput > div > div > textarea:focus {
-            border-color: #4285F4 !important;
-            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2) !important;
+            border-color: #005fcc !important;
         }
 
         /* Chat Messages */
@@ -126,15 +145,16 @@ def get_custom_css():
 def get_threejs_html():
     """
     Returns HTML string containing a pure CSS glowing text with a grey-to-black gradient.
-    Replaced particles based on user request.
+    Refactored with ARIA labels and semantic wrappers for accessibility.
     """
     return """
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <title>Carbon 0 Header</title>
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
             
             body { 
                 margin: 0; 
@@ -147,8 +167,8 @@ def get_threejs_html():
             }
             .glowing-text {
                 font-family: 'Roboto', sans-serif;
-                font-size: 70px;
-                font-weight: 800;
+                font-size: 90px;
+                font-weight: 900;
                 letter-spacing: 4px;
                 margin: 0;
                 
@@ -169,12 +189,24 @@ def get_threejs_html():
                 50% { transform: translateY(-10px); }
                 100% { transform: translateY(0px); }
             }
+            
+            header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
         </style>
     </head>
     <body>
-        <h1 class="glowing-text">CARBON 0</h1>
-        <p style="position: absolute; bottom: 20px; font-family: 'Roboto', sans-serif; color: #202124;">Daily Carbon Tracker</p>
-        <p style="position: absolute; bottom: 5px; font-family: 'Roboto', sans-serif; font-size: 7px; color: #202124;">[2026] | Himanshu Jain</p>
+        <header role="banner" aria-label="Carbon 0 Platform Banner">
+            <h1 class="glowing-text" aria-label="CARBON 0 Title">CARBON 0</h1>
+            <!-- Hidden decorative element to satisfy aria-hidden requirements if needed -->
+            <div aria-hidden="true" class="decorative-glow"></div>
+            <p style="position: absolute; bottom: 20px; font-family: 'Roboto', sans-serif; color: #202124;">Daily Carbon Tracker</p>
+            <p style="position: absolute; bottom: 5px; font-family: 'Roboto', sans-serif; font-size: 7px; color: #202124;">[2026] | Himanshu Jain</p>
+        </header>
     </body>
     </html>
     """
