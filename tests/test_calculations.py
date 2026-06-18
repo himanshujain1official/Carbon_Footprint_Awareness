@@ -1,36 +1,71 @@
 import pytest
-from calculations import calculate_transport_emissions, calculate_electricity_emissions, get_daily_baseline
+from calculations import (
+    calculate_transport_emissions,
+    calculate_electricity_emissions,
+    get_daily_baseline,
+    TRANSPORT_FACTORS,
+    ELECTRICITY_FACTORS,
+    DEFAULT_TRANSPORT_FACTOR,
+    DEFAULT_ELECTRICITY_FACTOR,
+    DAILY_BASELINE_KG
+)
 
-def test_calculate_transport_emissions_petrol():
-    assert calculate_transport_emissions(10, 'petrol car') == 1.90
-    assert calculate_transport_emissions(20.5, 'petrol car') == 3.89
+class TestCalculations:
+    
+    @pytest.mark.parametrize("distance, mode, expected", [
+        # Valid known modes
+        (10.0, "petrol car", round(10.0 * TRANSPORT_FACTORS['petrol car'], 2)),
+        (20.5, "ev", round(20.5 * TRANSPORT_FACTORS['ev'], 2)),
+        (15.0, "bus", round(15.0 * TRANSPORT_FACTORS['bus'], 2)),
+        (5.0, "walk", 0.0),
+        # Case insensitivity & whitespace
+        (10.0, " Petrol Car ", round(10.0 * TRANSPORT_FACTORS['petrol car'], 2)),
+        # Fallback for unknown modes
+        (10.0, "spaceship", round(10.0 * DEFAULT_TRANSPORT_FACTOR, 2)),
+        # Zero distance
+        (0.0, "petrol car", 0.0),
+        # Extremely large floats
+        (1e6, "ev", round(1e6 * TRANSPORT_FACTORS['ev'], 2)),
+    ])
+    def test_calculate_transport_emissions_valid(self, distance: float, mode: str, expected: float) -> None:
+        """Test transport calculations with various valid, edge, and fallback inputs."""
+        assert calculate_transport_emissions(distance, mode) == expected
 
-def test_calculate_transport_emissions_ev():
-    assert calculate_transport_emissions(10, 'ev') == 0.50
-    assert calculate_transport_emissions(10, 'electric car') == 0.50
+    @pytest.mark.parametrize("distance, mode", [
+        (-1.0, "petrol car"),
+        (-50.5, "ev")
+    ])
+    def test_calculate_transport_emissions_negative(self, distance: float, mode: str) -> None:
+        """Test that negative distances correctly raise a ValueError."""
+        with pytest.raises(ValueError, match="Distance cannot be negative."):
+            calculate_transport_emissions(distance, mode)
 
-def test_calculate_transport_emissions_unknown():
-    # Should default to petrol car (0.19 factor)
-    assert calculate_transport_emissions(10, 'spaceship') == 1.90
+    @pytest.mark.parametrize("hours, appliance, expected", [
+        # Valid known appliances
+        (2.0, "ac", round(2.0 * ELECTRICITY_FACTORS['ac'], 2)),
+        (5.5, "laptop", round(5.5 * ELECTRICITY_FACTORS['laptop'], 2)),
+        # Case insensitivity & whitespace
+        (3.0, " AC ", round(3.0 * ELECTRICITY_FACTORS['ac'], 2)),
+        # Fallback for unknown appliances
+        (4.0, "quantum computer", round(4.0 * DEFAULT_ELECTRICITY_FACTOR, 2)),
+        # Zero hours
+        (0.0, "heater", 0.0),
+        # Extremely large floats
+        (1e5, "tv", round(1e5 * ELECTRICITY_FACTORS['tv'], 2)),
+    ])
+    def test_calculate_electricity_emissions_valid(self, hours: float, appliance: str, expected: float) -> None:
+        """Test electricity calculations with various valid, edge, and fallback inputs."""
+        assert calculate_electricity_emissions(hours, appliance) == expected
 
-def test_calculate_transport_emissions_negative():
-    with pytest.raises(ValueError):
-        calculate_transport_emissions(-5, 'bus')
+    @pytest.mark.parametrize("hours, appliance", [
+        (-1.0, "ac"),
+        (-24.0, "tv")
+    ])
+    def test_calculate_electricity_emissions_negative(self, hours: float, appliance: str) -> None:
+        """Test that negative hours correctly raise a ValueError."""
+        with pytest.raises(ValueError, match="Hours cannot be negative."):
+            calculate_electricity_emissions(hours, appliance)
 
-def test_calculate_electricity_emissions_ac():
-    assert calculate_electricity_emissions(8, 'ac') == 6.40
-    assert calculate_electricity_emissions(2.5, 'ac') == 2.00
-
-def test_calculate_electricity_emissions_laptop():
-    assert calculate_electricity_emissions(10, 'laptop') == 0.50
-
-def test_calculate_electricity_emissions_unknown():
-    # Should default to 0.20 factor
-    assert calculate_electricity_emissions(10, 'microwave') == 2.00
-
-def test_calculate_electricity_emissions_negative():
-    with pytest.raises(ValueError):
-        calculate_electricity_emissions(-2, 'tv')
-
-def test_get_daily_baseline():
-    assert get_daily_baseline() == 13.0
+    def test_get_daily_baseline(self) -> None:
+        """Test that the daily baseline returns the correct constant."""
+        assert get_daily_baseline() == DAILY_BASELINE_KG
