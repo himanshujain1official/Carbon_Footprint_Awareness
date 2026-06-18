@@ -1,4 +1,4 @@
-# 🌱 Carbon Zero: Intelligent Carbon Footprint Awareness Platform
+# 🌱 Carbon 0: Intelligent Carbon Footprint Awareness Platform
 
 > **A smart, dynamic, and context-aware AI assistant designed to help individuals understand, track, and reduce their carbon footprint through natural language.**
 
